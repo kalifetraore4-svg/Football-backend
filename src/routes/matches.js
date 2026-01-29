@@ -3,6 +3,7 @@ import express from "express";
 
 const router = express.Router();
 
+// Matchs par date (soccer)
 router.get("/by-date", async (req, res) => {
   try {
     const { date } = req.query;
@@ -11,28 +12,27 @@ router.get("/by-date", async (req, res) => {
       return res.status(400).json({ error: "date manquante" });
     }
 
-    const response = await axios.get(
-      "https://api.football-data.org/v4/matches",
-      {
-        headers: {
-          "X-Auth-Token": process.env.FOOTBALL_DATA_API_KEY,
-        },
-        params: {
-          dateFrom: date,
-          dateTo: date,
-        },
-      }
-    );
+    // TheSportsDB attend YYYY-MM-DD
+    const url = `https://www.thesportsdb.com/api/v1/json/3/eventsday.php`;
 
-    const matches = response.data?.matches || [];
+    const response = await axios.get(url, {
+      params: {
+        d: date,
+        s: "Soccer",
+      },
+      timeout: 10000,
+    });
+
+    const events = response.data?.events || [];
 
     res.json({
+      source: "thesportsdb",
       date,
-      count: matches.length,
-      matches,
+      count: events.length,
+      matches: events,
     });
   } catch (err) {
-    console.error(err.message);
+    console.error("TheSportsDB error:", err.message);
     res.status(500).json({ error: "Erreur récupération matchs" });
   }
 });
