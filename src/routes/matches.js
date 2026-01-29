@@ -13,7 +13,7 @@ router.get("/by-date", async (req, res) => {
     }
 
     // TheSportsDB attend YYYY-MM-DD
-    const url = `https://www.thesportsdb.com/api/v1/json/3/eventsday.php`;
+    const url = `https://www.thesportsdb.com/api/v1/json/123/eventsday.php`;
 
     const response = await axios.get(url, {
       params: {
