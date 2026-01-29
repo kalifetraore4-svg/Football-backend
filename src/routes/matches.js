@@ -3,39 +3,33 @@ import express from "express";
 
 const router = express.Router();
 
-router.get("/api/matches/live", async (req, res) => {
+router.get("/live", async (req, res) => {
   try {
-    const apiKey = process.env.SPORTMONKS_API_KEY;
+    const apiKey = process.env.FOOTBALL_DATA_API_KEY;
 
     if (!apiKey) {
-      return res.status(500).json({ error: "SPORTMONKS_API_KEY manquante" });
+      return res.status(500).json({ error: "API key manquante" });
     }
 
-    const url = "https://api.sportmonks.com/v3/football/livescores/inplay";
-
-    const response = await axios.get(url, {
-      params: {
-        api_token: apiKey,
-        include:
-          "participants;scores;periods;events;league.country;round",
-      },
-      timeout: 10000,
-    });
-
-    const matches = response.data?.data || [];
+    const response = await axios.get(
+      "https://api.football-data.org/v4/matches?status=LIVE",
+      {
+        headers: {
+          "X-Auth-Token": apiKey,
+        },
+        timeout: 10000,
+      }
+    );
 
     res.json({
-      source: "sportmonks",
-      count: matches.length,
-      matches,
+      source: "football-data",
+      count: response.data.matches.length,
+      matches: response.data.matches,
     });
   } catch (error) {
-    console.error("SportMonks error:", error?.response?.data || error.message);
-    res.status(500).json({
-      error: "Impossible de récupérer les matchs en live",
-    });
+    console.error(error.response?.data || error.message);
+    res.status(500).json({ error: "Erreur récupération matchs live" });
   }
 });
 
 export default router;
-
