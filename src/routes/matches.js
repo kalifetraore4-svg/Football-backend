@@ -3,32 +3,37 @@ import express from "express";
 
 const router = express.Router();
 
-router.get("/live", async (req, res) => {
+router.get("/by-date", async (req, res) => {
   try {
-    const apiKey = process.env.FOOTBALL_DATA_API_KEY;
+    const { date } = req.query;
 
-    if (!apiKey) {
-      return res.status(500).json({ error: "API key manquante" });
+    if (!date) {
+      return res.status(400).json({ error: "date manquante" });
     }
 
     const response = await axios.get(
-      "https://api.football-data.org/v4/matches?status=LIVE",
+      "https://api.football-data.org/v4/matches",
       {
         headers: {
-          "X-Auth-Token": apiKey,
+          "X-Auth-Token": process.env.FOOTBALL_DATA_API_KEY,
         },
-        timeout: 10000,
+        params: {
+          dateFrom: date,
+          dateTo: date,
+        },
       }
     );
 
+    const matches = response.data?.matches || [];
+
     res.json({
-      source: "football-data",
-      count: response.data.matches.length,
-      matches: response.data.matches,
+      date,
+      count: matches.length,
+      matches,
     });
-  } catch (error) {
-    console.error(error.response?.data || error.message);
-    res.status(500).json({ error: "Erreur récupération matchs live" });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: "Erreur récupération matchs" });
   }
 });
 
